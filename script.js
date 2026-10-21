@@ -40,7 +40,8 @@ const products = [
   {id:33,name:"Natural Oak-Look Venetian Blinds",category:"Blinds",badge:"Warm wood look",description:"Warm oak-inspired slats add natural character while keeping light adjustable.",image:"https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=700&q=80"},
   {id:34,name:"Double Curtain Rod Set",category:"Accessories",badge:"Layer with ease",description:"Hang sheer and heavier curtains together with a coordinated double rod set.",image:"https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=700&q=80"},
   {id:35,name:"Ceiling Curtain Track",category:"Accessories",badge:"Minimal finish",description:"A discreet track option for a clean ceiling-mounted curtain installation.",image:"https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=700&q=80"},
-  {id:36,name:"Decorative Curtain Holdbacks",category:"Accessories",badge:"Finishing detail",description:"Frame an open window with a coordinated pair of decorative curtain holdbacks.",image:"https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=700&q=80"}
+  {id:36,name:"Decorative Curtain Holdbacks",category:"Accessories",badge:"Finishing detail",description:"Frame an open window with a coordinated pair of decorative curtain holdbacks.",image:"https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=700&q=80"},
+  {id:37,name:"Taupe Pleated Curtains with Sheer Voile",category:"Curtains",badge:"Layered custom look",description:"Full-length taupe pleats paired with a soft white sheer voile and decorative tiebacks.",image:"assets/curtains-polished-product.png"}
 ];
 
 const cart = new Map();
