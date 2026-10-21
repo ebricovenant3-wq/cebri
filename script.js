@@ -22,7 +22,17 @@ const products = [
   {id:15,name:"Vertical Window Blinds",category:"Blinds",badge:"For wide windows",description:"A practical option for wide windows and patio doors.",image:"https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=700&q=80"},
   {id:16,name:"Blackout Roller Blinds",category:"Roller Blinds",badge:"Light control",description:"A streamlined blind option for bedrooms and media rooms.",image:"https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?auto=format&fit=crop&w=700&q=80"},
   {id:17,name:"Linen-Style Curtains",category:"Curtains",badge:"Soft texture",description:"An understated textured look for a calm, natural room.",image:"assets/curtain-pleated-taupe.jpeg"},
-  {id:18,name:"Curtain & Blind Installation",category:"Installation",badge:"By request",description:"Request a quote for professional measuring and installation.",image:"assets/curtains-corner-room.jpeg",service:true}
+  {id:18,name:"Curtain & Blind Installation",category:"Installation",badge:"By request",description:"Request a quote for professional measuring and installation.",image:"assets/curtains-corner-room.jpeg",service:true},
+  {id:19,name:"Reef Ripple Ivory White Voile Curtain",category:"Curtains",badge:"Sheer voile",description:"An airy ivory voile with a subtle ripple texture that softly filters daylight.",image:"assets/curtains-corner-room.jpeg"},
+  {id:20,name:"Sand Linen-Look Curtains",category:"Curtains",badge:"Natural texture",description:"Warm sand tones and a relaxed linen-inspired texture for an inviting room.",image:"assets/curtain-pleated-taupe.jpeg"},
+  {id:21,name:"Emerald Green Statement Curtains",category:"Curtains",badge:"Statement color",description:"A rich emerald finish that brings depth and a confident accent to your space.",image:"assets/curtains-bedroom.jpeg"},
+  {id:22,name:"Burgundy Velvet-Look Curtains",category:"Curtains",badge:"Velvet look",description:"A deep burgundy, soft-touch look for a bold and elegant window finish.",image:"assets/curtain-pleated-taupe.jpeg"},
+  {id:23,name:"Zebra Day & Night Blinds",category:"Blinds",badge:"Adjustable light",description:"Alternating sheer and opaque bands let you shift between filtered light and privacy.",image:"https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=700&q=80"},
+  {id:24,name:"White Roller Blinds",category:"Roller Blinds",badge:"Clean & simple",description:"A crisp white roller blind for a bright, uncluttered window finish.",image:"https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?auto=format&fit=crop&w=700&q=80"},
+  {id:25,name:"Charcoal Blackout Blinds",category:"Roller Blinds",badge:"Room darkening",description:"A contemporary charcoal shade designed for added privacy and light control.",image:"https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?auto=format&fit=crop&w=700&q=80"},
+  {id:26,name:"Aluminium Venetian Blinds",category:"Blinds",badge:"Adjustable slats",description:"Durable aluminium slats give precise control over daylight and privacy.",image:"https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=700&q=80"},
+  {id:27,name:"Light-Grey Vertical Blinds",category:"Blinds",badge:"For wide windows",description:"Soft grey vertical slats suit wide windows and doors, with simple light adjustment.",image:"https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=700&q=80"},
+  {id:28,name:"Premium Curtain Hardware Set",category:"Accessories",badge:"Finishing touch",description:"Coordinate your window treatment with a polished set of curtain hardware.",image:"https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=700&q=80"}
 ];
 
 const cart = new Map();
