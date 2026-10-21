@@ -1,0 +1,143 @@
+const WHATSAPP_NUMBER = "2349054884121";
+const BUSINESS_EMAIL = "ebricovenant3@gmail.com";
+
+// Prices are estimates; confirm dimensions and final pricing with the customer.
+const products = [
+  {id:1,name:"Luxury Blackout Curtains",category:"Curtains",badge:"Blackout",description:"A rich, light-blocking finish for restful bedrooms.",image:"assets/curtain-pleated-taupe.jpeg"},
+  {id:2,name:"Elegant Sheer Curtains",category:"Curtains",badge:"Light & airy",description:"Softly filter daylight while keeping rooms bright.",image:"assets/curtains-corner-room.jpeg"},
+  {id:3,name:"Roller Window Blinds",category:"Roller Blinds",badge:"Modern pick",description:"A clean, practical look with easy light control.",image:"https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=700&q=80"},
+  {id:4,name:"Curtain Rod Set",category:"Accessories",badge:"Finishing touch",description:"Complete your curtains with a coordinated rod set.",image:"https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=700&q=80"},
+  {id:5,name:"Roman Blinds",category:"Blinds",badge:"Soft folds",description:"Tailored folds bring warmth and structure to windows.",image:"https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?auto=format&fit=crop&w=700&q=80"},
+  {id:6,name:"Venetian Blinds",category:"Blinds",badge:"Adjustable light",description:"Tilt the slats to balance privacy and natural light.",image:"https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=700&q=80"},
+  {id:7,name:"Pleated Blinds",category:"Blinds",badge:"Contemporary",description:"A neat, compact style for a considered finish.",image:"https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?auto=format&fit=crop&w=700&q=80"},
+  {id:8,name:"Panel Track Blinds",category:"Blinds",badge:"For wide windows",description:"Smooth, sweeping panels suit larger windows and doors.",image:"https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=700&q=80"},
+  {id:9,name:"Motorized Blinds",category:"Blinds",badge:"Premium choice",description:"Enjoy effortless control with a motorized option.",image:"https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?auto=format&fit=crop&w=700&q=80"},
+  {id:10,name:"Custom Curtain Design",category:"Curtains",badge:"Made to measure",description:"Choose a look for your room and let’s discuss your fit.",image:"assets/curtains-bedroom.jpeg"},
+  {id:11,name:"Curtain Tieback Set",category:"Accessories",badge:"Finishing touch",description:"A simple detail to frame curtains beautifully.",image:"https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=700&q=80"},
+  {id:12,name:"Textured Eyelet Curtains",category:"Curtains",badge:"Easy to hang",description:"A relaxed drape with a clean, contemporary finish.",image:"assets/curtains-bedroom.jpeg"},
+  {id:13,name:"Layered Day & Night Curtains",category:"Curtains",badge:"Layered look",description:"Pair a sheer layer with a heavier curtain for flexible light.",image:"assets/curtains-corner-room.jpeg"},
+  {id:14,name:"Wood-Look Venetian Blinds",category:"Blinds",badge:"Classic style",description:"Adjustable slats bring a timeless look to your windows.",image:"https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=700&q=80"},
+  {id:15,name:"Vertical Window Blinds",category:"Blinds",badge:"For wide windows",description:"A practical option for wide windows and patio doors.",image:"https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=700&q=80"},
+  {id:16,name:"Blackout Roller Blinds",category:"Roller Blinds",badge:"Light control",description:"A streamlined blind option for bedrooms and media rooms.",image:"https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?auto=format&fit=crop&w=700&q=80"},
+  {id:17,name:"Linen-Style Curtains",category:"Curtains",badge:"Soft texture",description:"An understated textured look for a calm, natural room.",image:"assets/curtain-pleated-taupe.jpeg"}
+];
+
+const cart = new Map();
+const grid = document.getElementById("productsGrid");
+const cartPanel = document.getElementById("cartPanel");
+const cartItems = document.getElementById("cartItems");
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.remove("hidden");
+  window.setTimeout(() => toast.classList.add("hidden"), 2400);
+}
+
+function renderProducts(query = "") {
+  const term = query.trim().toLowerCase();
+  const matches = products.filter(product => `${product.name} ${product.category}`.toLowerCase().includes(term));
+  const resultCount = document.getElementById("resultCount");
+  if (resultCount) resultCount.textContent = `${matches.length} ${matches.length === 1 ? "product" : "products"}${term ? ` for “${query}”` : " in the collection"}`;
+  grid.innerHTML = matches.length ? matches.map(product => `
+    <article class="product">
+      <div class="product-image"><img loading="lazy" src="${product.image}" alt="${product.name}"><span class="product-badge">${product.badge}</span></div>
+      <div class="product-body">
+        <p class="product-category">${product.category}</p>
+        <h3>${product.name}</h3>
+        <p class="product-description">${product.description}</p>
+        <div class="product-bottom"><span class="quote-label">Request a quote</span><button class="add-button" type="button" data-add="${product.id}" aria-label="Add ${product.name} to bag">Add to bag <span aria-hidden="true">+</span></button></div>
+      </div>
+    </article>`).join("") : '<div class="search-empty">No products match that search. Try another term.</div>';
+}
+
+function renderCart() {
+  const count = [...cart.values()].reduce((sum, quantity) => sum + quantity, 0);
+  document.getElementById("cartCount").textContent = count;
+  if (!cart.size) {
+    cartItems.innerHTML = '<div class="empty">Your bag is waiting for something lovely.<br>Explore the collection to get started.</div>';
+    return;
+  }
+  cartItems.innerHTML = [...cart.entries()].map(([id, quantity]) => {
+    const product = products.find(item => item.id === id);
+    return `<div class="cart-item"><img src="${product.image}" alt=""><div><strong>${product.name}</strong><small>Price confirmed after consultation</small><div class="qty"><button type="button" data-qty="${id}" data-change="-1" aria-label="Decrease quantity">−</button><span>${quantity}</span><button type="button" data-qty="${id}" data-change="1" aria-label="Increase quantity">+</button></div></div><button class="remove-item" type="button" data-remove="${id}" aria-label="Remove ${product.name}">×</button></div>`;
+  }).join("");
+}
+
+function addToCart(id) {
+  cart.set(id, (cart.get(id) || 0) + 1);
+  renderCart();
+  showToast("Added to your bag");
+}
+
+function orderOnWhatsApp() {
+  if (!cart.size) { showToast("Add an item to your bag first"); return; }
+  const lines = [...cart.entries()].map(([id, quantity]) => `- ${products.find(item => item.id === id).name} × ${quantity}`);
+  const message = `Hello Cebri Curtains & Blinds!\n\nI'd like a quote for:\n${lines.join("\n")}\n\nPlease confirm measurements, fabric options, availability and delivery costs.`;
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+}
+
+grid.addEventListener("click", event => {
+  const button = event.target.closest("[data-add]");
+  if (button) addToCart(Number(button.dataset.add));
+});
+cartItems.addEventListener("click", event => {
+  const quantityButton = event.target.closest("[data-qty]");
+  const removeButton = event.target.closest("[data-remove]");
+  if (quantityButton) {
+    const id = Number(quantityButton.dataset.qty);
+    const next = (cart.get(id) || 0) + Number(quantityButton.dataset.change);
+    if (next <= 0) cart.delete(id); else cart.set(id, next);
+    renderCart();
+  }
+  if (removeButton) { cart.delete(Number(removeButton.dataset.remove)); renderCart(); }
+});
+
+document.getElementById("search").addEventListener("input", event => {
+  document.querySelectorAll(".filter-button").forEach(button => button.classList.remove("active"));
+  renderProducts(event.target.value);
+});
+document.querySelectorAll("[data-category]").forEach(link => link.addEventListener("click", () => {
+  const category = link.dataset.category;
+  document.getElementById("search").value = category;
+  document.querySelectorAll(".filter-button").forEach(button => button.classList.toggle("active", button === link));
+  renderProducts(category);
+  document.getElementById("products").scrollIntoView({behavior:"smooth",block:"start"});
+}));
+document.getElementById("viewAll").addEventListener("click", () => {
+  document.getElementById("search").value = "";
+  document.querySelectorAll(".filter-button").forEach(button => button.classList.toggle("active", button.dataset.category === ""));
+  renderProducts();
+  document.getElementById("products").scrollIntoView({behavior:"smooth",block:"start"});
+});
+document.getElementById("cartButton").addEventListener("click", () => {
+  cartPanel.classList.remove("hidden");
+  document.getElementById("closeCart").focus();
+});
+function closeCart() { cartPanel.classList.add("hidden"); }
+document.getElementById("closeCart").addEventListener("click", closeCart);
+cartPanel.addEventListener("click", event => { if (event.target.matches("[data-close-cart]")) closeCart(); });
+document.addEventListener("keydown", event => { if (event.key === "Escape") closeCart(); });
+document.getElementById("checkoutButton").addEventListener("click", orderOnWhatsApp);
+document.getElementById("menuToggle").addEventListener("click", event => {
+  const nav = document.getElementById("mainNav");
+  const open = nav.classList.toggle("open");
+  event.currentTarget.setAttribute("aria-expanded", String(open));
+});
+document.querySelectorAll("#mainNav a").forEach(link => link.addEventListener("click", () => {
+  document.getElementById("mainNav").classList.remove("open");
+  document.getElementById("menuToggle").setAttribute("aria-expanded", "false");
+}));
+const whatsappLink = document.getElementById("whatsappLink");
+whatsappLink.href = `https://wa.me/${WHATSAPP_NUMBER}`;
+whatsappLink.target = "_blank";
+whatsappLink.rel = "noopener noreferrer";
+const emailLink = document.getElementById("emailLink");
+emailLink.href = `mailto:${BUSINESS_EMAIL}`;
+emailLink.textContent = BUSINESS_EMAIL;
+document.getElementById("year").textContent = new Date().getFullYear();
+const initialCategory = new URLSearchParams(window.location.search).get("category") || "";
+document.getElementById("search").value = initialCategory;
+document.querySelectorAll(".filter-button").forEach(button => button.classList.toggle("active", button.dataset.category === initialCategory));
+renderProducts(initialCategory);
+renderCart();

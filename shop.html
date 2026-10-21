@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browse Cebri's curtain and window blind collection and request a quote.">
+  <title>Shop Curtains &amp; Blinds | Cebri</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="topbar"><span>✦ Consultations &amp; measurements</span><span>✓ Thoughtful fabrics &amp; blinds</span><span class="tagline">Beautiful windows. Better living.</span></div>
+  <header>
+    <a class="brand" href="index.html" aria-label="Cebri home"><span class="brand-mark">C</span><span><strong>Cebri</strong><small>Curtains &amp; Blinds</small></span></a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+    <nav class="nav" id="mainNav" aria-label="Main navigation"><a href="index.html">Home</a><a href="shop.html" aria-current="page">Shop</a><a href="#filters">Categories</a><a href="index.html#our-work">Our work</a><a href="index.html#about">About us</a><a href="index.html#contact">Contact</a></nav>
+    <div class="header-actions"><label class="search" aria-label="Search products"><input id="search" type="search" placeholder="Search curtains, blinds..."><span aria-hidden="true">⌕</span></label><button class="cart-button" id="cartButton" aria-label="Open shopping bag">Bag <span class="cart-icon">♧</span><span class="cart-count" id="cartCount">0</span></button></div>
+  </header>
+  <main>
+    <section class="shop-hero"><p class="eyebrow">The Cebri collection</p><h1>Find the right finish<br>for your <em>windows.</em></h1><p>Browse curtains, blinds and finishing details. Add items to your bag and request a quote when you’re ready.</p></section>
+    <section class="section shop-catalog" id="products">
+      <div class="shop-heading"><div><p class="eyebrow">Browse the collection</p><h2>Curtains &amp; window blinds</h2></div><button class="text-link" id="viewAll" type="button">Show all products <span>↗</span></button></div>
+      <div class="category-filters" id="filters" aria-label="Filter products by category"><button type="button" class="filter-button active" data-category="">All products</button><button type="button" class="filter-button" data-category="Curtains">Curtains</button><button type="button" class="filter-button" data-category="Blinds">Window blinds</button><button type="button" class="filter-button" data-category="Roller Blinds">Roller blinds</button><button type="button" class="filter-button" data-category="Accessories">Accessories</button></div>
+      <div class="shop-result" id="resultCount" aria-live="polite"></div>
+      <div class="products" id="productsGrid" aria-live="polite"></div>
+    </section>
+    <section class="shop-help"><div><p class="eyebrow">Need a hand?</p><h2>Not sure what suits your space?</h2><p>Send us a message to discuss styles, fabric options and measurements.</p></div><a class="button button-gold" id="whatsappLink" href="#">Ask us on WhatsApp <span>↗</span></a></section>
+  </main>
+  <footer><div class="footer-top"><a class="brand footer-brand" href="index.html"><span class="brand-mark">C</span><span><strong>Cebri</strong><small>Curtains &amp; Blinds</small></span></a><p>Style · comfort · elegance</p><nav aria-label="Footer navigation"><a href="index.html">Home</a><a href="index.html#about">About</a><a href="index.html#contact">Contact</a></nav></div><div class="copyright"><span>© <span id="year"></span> Cebri Curtains &amp; Blinds</span><span>Made for beautiful living.</span></div></footer>
+  <div class="cart-panel hidden" id="cartPanel" role="dialog" aria-modal="true" aria-labelledby="cartTitle"><button class="cart-backdrop" data-close-cart aria-label="Close cart"></button><aside class="cart-drawer"><div class="drawer-head"><div><p class="eyebrow">Your selection</p><h2 id="cartTitle">Shopping bag</h2></div><button class="close-cart" id="closeCart" aria-label="Close cart">×</button></div><div id="cartItems"></div><div class="cart-summary"><p class="fineprint">Final pricing depends on measurements and fabric choices. We’ll confirm your quote before you order.</p><button class="button button-green checkout-button" id="checkoutButton">Request a quote on WhatsApp <span>↗</span></button></div></aside></div>
+  <div class="toast hidden" id="toast" role="status"></div>
+  <script src="script.js"></script>
+</body>
+</html>
