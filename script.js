@@ -1,7 +1,9 @@
-const WHATSAPP_NUMBER = "2349054884121";
-const BUSINESS_EMAIL = "ebricovenant3@gmail.com";
+const WHATSAPP_NUMBER = "2349054884121"; // International format, digits only; leave empty until verified.
+const BUSINESS_EMAIL = "ebricovenant3@gmail.com"; // Used for order requests if WhatsApp is not configured.
+// Enter verified account details here; the static checkout never displays them before review.
+const BANK_TRANSFER_DETAILS = {bankName:"", accountName:"", accountNumber:""};
+const CART_STORAGE_KEY = "cebri-cart-v1";
 
-// Prices are estimates; confirm dimensions and final pricing with the customer.
 const products = [
   {id:1,name:"Luxury Blackout Curtains",category:"Curtains",badge:"Blackout",description:"A rich, light-blocking finish for restful bedrooms.",image:"assets/curtain-pleated-taupe.jpeg"},
   {id:2,name:"Elegant Sheer Curtains",category:"Curtains",badge:"Light & airy",description:"Softly filter daylight while keeping rooms bright.",image:"assets/curtains-corner-room.jpeg"},
@@ -19,10 +21,17 @@ const products = [
   {id:14,name:"Wood-Look Venetian Blinds",category:"Blinds",badge:"Classic style",description:"Adjustable slats bring a timeless look to your windows.",image:"https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=700&q=80"},
   {id:15,name:"Vertical Window Blinds",category:"Blinds",badge:"For wide windows",description:"A practical option for wide windows and patio doors.",image:"https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=700&q=80"},
   {id:16,name:"Blackout Roller Blinds",category:"Roller Blinds",badge:"Light control",description:"A streamlined blind option for bedrooms and media rooms.",image:"https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?auto=format&fit=crop&w=700&q=80"},
-  {id:17,name:"Linen-Style Curtains",category:"Curtains",badge:"Soft texture",description:"An understated textured look for a calm, natural room.",image:"assets/curtain-pleated-taupe.jpeg"}
+  {id:17,name:"Linen-Style Curtains",category:"Curtains",badge:"Soft texture",description:"An understated textured look for a calm, natural room.",image:"assets/curtain-pleated-taupe.jpeg"},
+  {id:18,name:"Curtain & Blind Installation",category:"Installation",badge:"By request",description:"Request a quote for professional measuring and installation.",image:"assets/curtains-corner-room.jpeg",service:true}
 ];
 
 const cart = new Map();
+try {
+  const savedCart = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || "[]");
+  savedCart.forEach(([id, quantity]) => {
+    if (products.some(product => product.id === Number(id)) && Number.isInteger(quantity) && quantity > 0) cart.set(Number(id), quantity);
+  });
+} catch { /* Continue with an empty cart if browser storage is unavailable. */ }
 const grid = document.getElementById("productsGrid");
 const cartPanel = document.getElementById("cartPanel");
 const cartItems = document.getElementById("cartItems");
@@ -46,7 +55,7 @@ function renderProducts(query = "") {
         <p class="product-category">${product.category}</p>
         <h3>${product.name}</h3>
         <p class="product-description">${product.description}</p>
-        <div class="product-bottom"><span class="quote-label">Request a quote</span><button class="add-button" type="button" data-add="${product.id}" aria-label="Add ${product.name} to bag">Add to bag <span aria-hidden="true">+</span></button></div>
+        <div class="product-bottom"><span class="quote-label">${product.service ? "Request service quote" : "Request a quote"}</span><button class="add-button" type="button" data-add="${product.id}" aria-label="Add ${product.name} to bag">Add to bag <span aria-hidden="true">+</span></button></div>
       </div>
     </article>`).join("") : '<div class="search-empty">No products match that search. Try another term.</div>';
 }
@@ -56,12 +65,29 @@ function renderCart() {
   document.getElementById("cartCount").textContent = count;
   if (!cart.size) {
     cartItems.innerHTML = '<div class="empty">Your bag is waiting for something lovely.<br>Explore the collection to get started.</div>';
+    saveCart();
     return;
   }
   cartItems.innerHTML = [...cart.entries()].map(([id, quantity]) => {
     const product = products.find(item => item.id === id);
-    return `<div class="cart-item"><img src="${product.image}" alt=""><div><strong>${product.name}</strong><small>Price confirmed after consultation</small><div class="qty"><button type="button" data-qty="${id}" data-change="-1" aria-label="Decrease quantity">−</button><span>${quantity}</span><button type="button" data-qty="${id}" data-change="1" aria-label="Increase quantity">+</button></div></div><button class="remove-item" type="button" data-remove="${id}" aria-label="Remove ${product.name}">×</button></div>`;
+    const quoteText = product.service ? "Service fee confirmed after review" : "Price confirmed after consultation";
+    return `<div class="cart-item"><img src="${product.image}" alt=""><div><strong>${product.name}</strong><small>${quoteText}</small><div class="qty"><button type="button" data-qty="${id}" data-change="-1" aria-label="Decrease quantity">−</button><span>${quantity}</span><button type="button" data-qty="${id}" data-change="1" aria-label="Increase quantity">+</button></div></div><button class="remove-item" type="button" data-remove="${id}" aria-label="Remove ${product.name}">×</button></div>`;
   }).join("");
+  saveCart();
+}
+
+function saveCart() {
+  try { localStorage.setItem(CART_STORAGE_KEY, JSON.stringify([...cart.entries()])); }
+  catch { /* The cart remains usable for this page if storage is unavailable. */ }
+}
+
+function renderBankTransferNote() {
+  const note = document.getElementById("bankTransferNote");
+  if (!note) return;
+  const detailsReady = Object.values(BANK_TRANSFER_DETAILS).every(value => value.trim());
+  note.textContent = detailsReady
+    ? "Cebri will review your request and send the confirmed quote and bank-transfer instructions manually."
+    : "Verified bank details have not been added yet. Cebri will review your request and share the quote and payment instructions manually.";
 }
 
 function addToCart(id) {
@@ -70,11 +96,22 @@ function addToCart(id) {
   showToast("Added to your bag");
 }
 
-function orderOnWhatsApp() {
+function orderOnWhatsApp(event) {
+  event.preventDefault();
   if (!cart.size) { showToast("Add an item to your bag first"); return; }
+  const form = document.getElementById("checkoutForm");
+  if (!form.reportValidity()) return;
+  const details = new FormData(form);
   const lines = [...cart.entries()].map(([id, quantity]) => `- ${products.find(item => item.id === id).name} × ${quantity}`);
-  const message = `Hello Cebri Curtains & Blinds!\n\nI'd like a quote for:\n${lines.join("\n")}\n\nPlease confirm measurements, fabric options, availability and delivery costs.`;
-  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  const message = `Hello Cebri Curtains & Blinds!\n\nI'd like you to review this order request:\n${lines.join("\n")}\n\nCustomer: ${details.get("name")}\nPhone: ${details.get("phone")}\nAddress: ${details.get("address") || "To be confirmed"}\nMeasurements / notes: ${details.get("notes") || "Not provided yet"}\nPreferred payment: ${details.get("payment")}\n\nPlease confirm measurements, fabric options, service availability, delivery and final quote. I will wait for your confirmation and bank details before making a transfer.`;
+  if (WHATSAPP_NUMBER) {
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    showToast("Order request opened in WhatsApp");
+  } else if (BUSINESS_EMAIL) {
+    window.location.href = `mailto:${BUSINESS_EMAIL}?subject=${encodeURIComponent("Cebri order review request")}&body=${encodeURIComponent(message)}`;
+  } else {
+    showToast("Add a WhatsApp number or business email in script.js first");
+  }
 }
 
 grid.addEventListener("click", event => {
@@ -118,7 +155,7 @@ function closeCart() { cartPanel.classList.add("hidden"); }
 document.getElementById("closeCart").addEventListener("click", closeCart);
 cartPanel.addEventListener("click", event => { if (event.target.matches("[data-close-cart]")) closeCart(); });
 document.addEventListener("keydown", event => { if (event.key === "Escape") closeCart(); });
-document.getElementById("checkoutButton").addEventListener("click", orderOnWhatsApp);
+document.getElementById("checkoutForm").addEventListener("submit", orderOnWhatsApp);
 document.getElementById("menuToggle").addEventListener("click", event => {
   const nav = document.getElementById("mainNav");
   const open = nav.classList.toggle("open");
@@ -141,3 +178,4 @@ document.getElementById("search").value = initialCategory;
 document.querySelectorAll(".filter-button").forEach(button => button.classList.toggle("active", button.dataset.category === initialCategory));
 renderProducts(initialCategory);
 renderCart();
+renderBankTransferNote();
