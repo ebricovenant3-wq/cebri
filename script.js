@@ -1,5 +1,11 @@
 const WHATSAPP_NUMBER = "2349054884121"; // International format, digits only; leave empty until verified.
 const BUSINESS_EMAIL = "ebricovenant3@gmail.com"; // Used for order requests if WhatsApp is not configured.
+// Values in backend-config.js are public browser settings only.
+const CEBRI_CONFIG = window.CEBRI_CONFIG || {};
+const SUPABASE_URL = (CEBRI_CONFIG.supabaseUrl || "").replace(/\/$/, "");
+const ORDER_API_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/submit-order` : "";
+const ORDER_API_ANON_KEY = CEBRI_CONFIG.supabaseAnonKey || "";
+const ASSISTANT_API_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/customer-assistant` : "";
 // Enter verified account details here; the static checkout never displays them before review.
 const BANK_TRANSFER_DETAILS = {bankName:"", accountName:"", accountNumber:""};
 const CART_STORAGE_KEY = "cebri-cart-v1";
@@ -115,21 +121,76 @@ function addToCart(id) {
   showToast("Added to your bag");
 }
 
-function orderOnWhatsApp(event) {
+function makeOrderMessage(details, lines) {
+  return `Hello Cebri Curtains & Blinds!\n\nI'd like you to review this order request:\n${lines.join("\n")}\n\nCustomer: ${details.get("name")}\nPhone: ${details.get("phone")}\nAddress: ${details.get("address") || "To be confirmed"}\nMeasurements / notes: ${details.get("notes") || "Not provided yet"}\nPreferred payment: ${details.get("payment")}\n\nPlease confirm measurements, fabric options, service availability, delivery and final quote. I will wait for your confirmation and bank details before making a transfer.`;
+}
+
+function sendOrderToWhatsApp(message) {
+  if (WHATSAPP_NUMBER) {
+    window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  } else if (BUSINESS_EMAIL) {
+    window.location.href = `mailto:${BUSINESS_EMAIL}?subject=${encodeURIComponent("Cebri order review request")}&body=${encodeURIComponent(message)}`;
+  } else {
+    showToast("Add a WhatsApp number or business email in script.js first");
+  }
+}
+
+async function orderOnWhatsApp(event) {
   event.preventDefault();
   if (!cart.size) { showToast("Add an item to your bag first"); return; }
   const form = document.getElementById("checkoutForm");
   if (!form.reportValidity()) return;
   const details = new FormData(form);
-  const lines = [...cart.entries()].map(([id, quantity]) => `- ${products.find(item => item.id === id).name} × ${quantity}`);
-  const message = `Hello Cebri Curtains & Blinds!\n\nI'd like you to review this order request:\n${lines.join("\n")}\n\nCustomer: ${details.get("name")}\nPhone: ${details.get("phone")}\nAddress: ${details.get("address") || "To be confirmed"}\nMeasurements / notes: ${details.get("notes") || "Not provided yet"}\nPreferred payment: ${details.get("payment")}\n\nPlease confirm measurements, fabric options, service availability, delivery and final quote. I will wait for your confirmation and bank details before making a transfer.`;
-  if (WHATSAPP_NUMBER) {
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
-    showToast("Order request opened in WhatsApp");
-  } else if (BUSINESS_EMAIL) {
-    window.location.href = `mailto:${BUSINESS_EMAIL}?subject=${encodeURIComponent("Cebri order review request")}&body=${encodeURIComponent(message)}`;
-  } else {
-    showToast("Add a WhatsApp number or business email in script.js first");
+  const lines = [...cart.entries()].map(([id, quantity]) => {
+    const product = products.find(item => item.id === id);
+    return `- ${product.name} × ${quantity}`;
+  });
+  const message = makeOrderMessage(details, lines);
+  const submitButton = document.getElementById("checkoutButton");
+  submitButton.disabled = true;
+  submitButton.textContent = "Sending request…";
+
+  try {
+    if (ORDER_API_URL && ORDER_API_ANON_KEY) {
+      const sessionResult = window.CEBRI_SUPABASE ? await window.CEBRI_SUPABASE.auth.getSession() : null;
+      const accessToken = sessionResult?.data?.session?.access_token;
+      const response = await fetch(ORDER_API_URL, {
+        method: "POST",
+        headers: {"Content-Type":"application/json", "apikey":ORDER_API_ANON_KEY, ...(accessToken ? {"Authorization":`Bearer ${accessToken}`} : {})},
+        body: JSON.stringify({
+          name: details.get("name"),
+          phone: details.get("phone"),
+          email: details.get("email"),
+          address: details.get("address"),
+          notes: details.get("notes"),
+          payment: details.get("payment"),
+          consent: details.get("consent") === "on",
+          website: details.get("website"),
+          items: [...cart.entries()].map(([id, quantity]) => ({id, name:products.find(item => item.id === id).name, quantity}))
+        })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "The request could not be saved.");
+      cart.clear();
+      saveCart();
+      renderCart();
+      form.reset();
+      closeCart();
+      showToast(result.alertSent === false
+        ? `Request saved · Ref ${result.reference} · Cebri email alert needs setup`
+        : `Request received · Ref ${result.reference}`);
+      return;
+    }
+
+    showToast("Backend not connected yet · opening WhatsApp");
+    sendOrderToWhatsApp(message);
+  } catch (error) {
+    console.error("Order request could not be saved.", error);
+    showToast("Could not save request · opening WhatsApp");
+    sendOrderToWhatsApp(message);
+  } finally {
+    submitButton.disabled = false;
+    submitButton.innerHTML = 'Send order for review <span>↗</span>';
   }
 }
 
@@ -192,9 +253,85 @@ const emailLink = document.getElementById("emailLink");
 emailLink.href = `mailto:${BUSINESS_EMAIL}`;
 emailLink.textContent = BUSINESS_EMAIL;
 document.getElementById("year").textContent = new Date().getFullYear();
+const accountLink = document.getElementById("accountLink");
+if (accountLink && window.CEBRI_SUPABASE) {
+  const updateAccountLink = session => {
+    accountLink.href = session ? "account.html" : "auth.html";
+    accountLink.textContent = session ? "My account" : "Sign in";
+  };
+  window.CEBRI_SUPABASE.auth.getSession().then(({data}) => updateAccountLink(data.session));
+  window.CEBRI_SUPABASE.auth.onAuthStateChange((_event, session) => updateAccountLink(session));
+}
 const initialCategory = new URLSearchParams(window.location.search).get("category") || "";
 document.getElementById("search").value = initialCategory;
 document.querySelectorAll(".filter-button").forEach(button => button.classList.toggle("active", button.dataset.category === initialCategory));
 renderProducts(initialCategory);
 renderCart();
 renderBankTransferNote();
+
+const assistantPanel = document.getElementById("assistantChat");
+const assistantToggle = document.getElementById("assistantToggle");
+const assistantMessages = document.getElementById("assistantMessages");
+const assistantForm = document.getElementById("assistantForm");
+const assistantInput = document.getElementById("assistantInput");
+const assistantHistory = [];
+let assistantBusy = false;
+if (!ASSISTANT_API_URL || !ORDER_API_ANON_KEY) assistantToggle.classList.add("hidden");
+
+function addAssistantMessage(content, role) {
+  const bubble = document.createElement("p");
+  bubble.className = `assistant-bubble ${role === "user" ? "assistant-user" : ""}`;
+  bubble.textContent = content;
+  assistantMessages.append(bubble);
+  assistantMessages.scrollTop = assistantMessages.scrollHeight;
+  return bubble;
+}
+
+assistantToggle.addEventListener("click", () => {
+  const open = assistantPanel.classList.contains("hidden");
+  assistantPanel.classList.toggle("hidden", !open);
+  assistantToggle.setAttribute("aria-expanded", String(open));
+  if (open) assistantInput.focus();
+});
+document.getElementById("assistantClose").addEventListener("click", () => {
+  assistantPanel.classList.add("hidden");
+  assistantToggle.setAttribute("aria-expanded", "false");
+  assistantToggle.focus();
+});
+assistantForm.addEventListener("submit", async event => {
+  event.preventDefault();
+  const message = assistantInput.value.trim();
+  if (!message || assistantBusy) return;
+
+  assistantBusy = true;
+  assistantInput.value = "";
+  assistantInput.disabled = true;
+  assistantForm.querySelector("button").disabled = true;
+  addAssistantMessage(message, "user");
+  assistantHistory.push({role:"user", content:message});
+  const waiting = addAssistantMessage("One moment…", "assistant");
+
+  try {
+    if (!ASSISTANT_API_URL || !ORDER_API_ANON_KEY) {
+      waiting.textContent = `The AI assistant is not connected yet. Please contact Cebri at ${BUSINESS_EMAIL} or use the WhatsApp link on this page.`;
+      return;
+    }
+    const response = await fetch(ASSISTANT_API_URL, {
+      method:"POST",
+      headers:{"Content-Type":"application/json", "apikey":ORDER_API_ANON_KEY},
+      body:JSON.stringify({messages:assistantHistory.slice(-8)})
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || "The assistant is unavailable right now.");
+    waiting.textContent = result.answer;
+    assistantHistory.push({role:"assistant", content:result.answer});
+    if (assistantHistory.length > 8) assistantHistory.splice(0, assistantHistory.length - 8);
+  } catch (error) {
+    waiting.textContent = `${error.message || "The assistant is unavailable right now."} You can email ${BUSINESS_EMAIL} or use the WhatsApp link on this page.`;
+  } finally {
+    assistantBusy = false;
+    assistantInput.disabled = false;
+    assistantForm.querySelector("button").disabled = false;
+    assistantInput.focus();
+  }
+});

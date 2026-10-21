@@ -1,0 +1,11 @@
+[functions.submit-order]
+verify_jwt = false
+
+[functions.customer-assistant]
+verify_jwt = false
+
+[functions.whatsapp-assistant]
+verify_jwt = false
+
+[functions.email-assistant]
+verify_jwt = false

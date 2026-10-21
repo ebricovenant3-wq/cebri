@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: cebri-curtains-blinds
+    runtime: static
+    buildCommand: >-
+      mkdir -p dist &&
+      cp index.html shop.html auth.html account.html styles.css script.js
+      backend-config.js supabase-client.js auth.js account.js dist/ &&
+      cp -R assets dist/assets
+    staticPublishPath: ./dist

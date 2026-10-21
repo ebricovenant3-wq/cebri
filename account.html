@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Manage your Cebri profile and quote requests."><title>My account | Cebri Curtains &amp; Blinds</title><link rel="stylesheet" href="styles.css"></head>
+<body class="account-page">
+  <header class="account-header"><a class="brand" href="index.html"><span class="brand-mark">C</span><span><strong>Cebri</strong><small>Curtains &amp; Blinds</small></span></a><nav class="account-nav"><a href="shop.html">Shop</a><button id="logoutButton" type="button" class="account-link">Log out</button></nav></header>
+  <main class="account-dashboard"><section class="account-card"><p class="eyebrow">Customer profile</p><h1>My account</h1><p class="account-intro" id="accountEmail"></p><form id="profileForm" class="account-form"><label>Full name<input name="full_name" autocomplete="name" required maxlength="120"></label><label>Phone number<input name="phone" type="tel" autocomplete="tel" maxlength="40"></label><button class="button button-green account-submit" type="submit">Save profile</button></form><p class="account-message" id="profileMessage" role="status" aria-live="polite"></p></section>
+    <section class="account-card order-history"><p class="eyebrow">Your requests</p><h2>Quote history</h2><div id="orderHistory" aria-live="polite"><p class="account-intro">Loading your quote requests…</p></div></section></main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="backend-config.js"></script><script src="supabase-client.js"></script><script src="account.js"></script>
+</body></html>
