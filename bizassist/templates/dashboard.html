@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f5">
+  <meta name="description" content="BizAssist helps teams manage WhatsApp customer conversations and everyday tasks.">
+  <title>BizAssist — WhatsApp Business Automation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="#overview"><span class="brand-mark">b</span><span>bizassist<small>WHATSAPP BUSINESS</small></span></a>
+    <div class="workspace"><div class="workspace-avatar">A</div><div><strong>Acme Studio</strong><small>Business workspace</small></div><span class="chevron">⌄</span></div>
+    <p class="nav-label">WORKSPACE</p>
+    <nav class="main-nav" aria-label="Main navigation">
+      <button class="nav-item active" data-view="overview"><span class="nav-icon">◫</span>Overview</button>
+      <button class="nav-item" data-view="inbox"><span class="nav-icon">▤</span>Inbox<span class="nav-count" id="navUnread">3</span></button>
+      <button class="nav-item" data-view="tasks"><span class="nav-icon">✓</span>Tasks<span class="nav-count muted-count" id="navTasks">4</span></button>
+      <button class="nav-item" data-view="automations"><span class="nav-icon">⤳</span>Automations</button>
+      <button class="nav-item" data-view="contacts"><span class="nav-icon">♙</span>Contacts</button>
+    </nav>
+    <p class="nav-label tools-label">MANAGE</p>
+    <nav class="main-nav" aria-label="Workspace management"><button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span>Settings</button></nav>
+    <div class="sidebar-bottom"><div class="connection"><span class="online-dot"></span><span><strong>WhatsApp connected</strong><small>+1 (415) 555-0198</small></span><span class="more">···</span></div><button class="profile"><span class="profile-avatar">JD</span><span><strong>Jordan Davis</strong><small>Admin</small></span><span class="chevron">⌄</span></button></div>
+  </aside>
+  <main class="main-area" id="overview">
+    <header class="topbar"><button class="mobile-menu" id="menuButton" aria-label="Open navigation">☰</button><div class="breadcrumbs"><span>Workspace</span><b>/</b><strong id="crumb">Overview</strong></div><div class="top-actions"><span class="today" id="today"></span><button class="icon-button" aria-label="Help">?</button><button class="notification-button" aria-label="Notifications">♧<i></i></button><span class="profile-avatar top-avatar">JD</span></div></header>
+    <section class="page-content" id="viewRoot">
+      <div class="welcome-row"><div><p class="eyebrow">THURSDAY, OCTOBER 22, 2026</p><h1>Good morning, Jordan <span>✳</span></h1><p class="subheading">Here’s what’s happening with your business today.</p></div><button class="button primary-button" id="newTask"><span>＋</span> Create a task</button></div>
+      <div class="stats-grid">
+        <article class="stat-card"><div class="stat-top"><span>Open conversations</span><span class="stat-icon green-icon">▤</span></div><div class="stat-value">24 <span class="trend positive">↗ 12%</span></div><div class="stat-foot">Compared to last week</div><div class="sparkline green-line"><i style="height:35%"></i><i style="height:48%"></i><i style="height:42%"></i><i style="height:62%"></i><i style="height:55%"></i><i style="height:77%"></i><i style="height:68%"></i><i style="height:91%"></i></div></article>
+        <article class="stat-card"><div class="stat-top"><span>Needs your reply</span><span class="stat-icon orange-icon">◷</span></div><div class="stat-value">8 <span class="trend negative">↗ 3 new</span></div><div class="stat-foot">Waiting for a response</div><div class="stat-progress"><span style="width:68%"></span></div><small class="progress-note">68% handled today</small></article>
+        <article class="stat-card"><div class="stat-top"><span>Resolved today</span><span class="stat-icon blue-icon">✓</span></div><div class="stat-value">36 <span class="trend positive">↗ 8%</span></div><div class="stat-foot">Across all conversations</div><div class="sparkline blue-line"><i style="height:55%"></i><i style="height:45%"></i><i style="height:70%"></i><i style="height:61%"></i><i style="height:80%"></i><i style="height:72%"></i><i style="height:88%"></i><i style="height:100%"></i></div></article>
+        <article class="stat-card"><div class="stat-top"><span>Tasks due today</span><span class="stat-icon purple-icon">✓</span></div><div class="stat-value" id="dueCount">4 <span class="trend neutral">2 completed</span></div><div class="stat-foot">Follow-ups and reminders</div><div class="task-mini"><span class="mini-avatars"><i>MK</i><i>JD</i><i>+2</i></span><span>Assigned to your team</span></div></article>
+      </div>
+      <div class="content-grid">
+        <section class="panel conversations-panel"><div class="panel-heading"><div><h2>Recent conversations</h2><p>Keep up with your latest customer messages.</p></div><button class="link-button" data-go="inbox">Open inbox <span>→</span></button></div><div class="conversation-list" id="recentConversations"></div></section>
+        <section class="panel tasks-panel"><div class="panel-heading"><div><h2>Tasks for today</h2><p>A few things to keep moving.</p></div><button class="icon-button add-task" id="newTaskSmall" aria-label="Create task">＋</button></div><div class="task-list" id="dashboardTasks"></div><button class="view-tasks" data-go="tasks">View all tasks <span>→</span></button></section>
+      </div>
+      <section class="panel automation-panel"><div class="panel-heading"><div><div class="title-inline"><span class="automation-spark">✳</span><h2>Automations at work</h2></div><p>Let routine conversations take care of themselves.</p></div><button class="link-button" data-go="automations">Manage automations <span>→</span></button></div><div class="automation-cards"><article class="automation-card"><span class="automation-icon">☼</span><div><strong>Welcome new customers</strong><small>Greets customers when they message for the first time.</small><span class="automation-meta"><i class="online-dot"></i> Active <b>·</b> 18 this week</span></div><label class="switch"><input type="checkbox" checked aria-label="Toggle welcome new customers"><span></span></label></article><article class="automation-card"><span class="automation-icon follow-icon">↻</span><div><strong>Follow up on quotes</strong><small>Checks in if a quote hasn’t received a reply.</small><span class="automation-meta"><i class="online-dot"></i> Active <b>·</b> 7 this week</span></div><label class="switch"><input type="checkbox" checked aria-label="Toggle follow up on quotes"><span></span></label></article><article class="automation-card"><span class="automation-icon away-icon">◷</span><div><strong>After-hours reply</strong><small>Sets expectations when your team is offline.</small><span class="automation-meta paused-meta"><i></i> Paused <b>·</b> —</span></div><label class="switch"><input type="checkbox" aria-label="Toggle after-hours reply"><span></span></label></article></div></section>
+      <footer>BizAssist helps your team stay on top of every customer conversation. <span>Need a hand? <a href="#help">Visit help center</a></span></footer>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+  <dialog class="task-dialog" id="taskDialog"><form method="dialog" id="taskForm"><div class="dialog-head"><div><p class="eyebrow">STAY ON TOP OF IT</p><h2>Create a task</h2></div><button class="icon-button" value="cancel" aria-label="Close">×</button></div><label>Task name<input name="title" required maxlength="90" placeholder="e.g. Follow up with customer"></label><label>Due date<input name="date" type="date" required></label><label>Assign to<select name="assignee"><option>Jordan Davis</option><option>Morgan Kim</option><option>Taylor Reed</option></select></label><div class="dialog-actions"><button class="button secondary-button" value="cancel">Cancel</button><button class="button primary-button" value="default">Create task</button></div></form></dialog>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

@@ -4,3 +4,6 @@
 supabase/.temp/
 supabase/functions/.env
 dist/
+bizassist/.venv/
+bizassist/bizassist.sqlite3
+bizassist/bizassist.db
