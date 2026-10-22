@@ -6,6 +6,10 @@ A static storefront built with HTML, CSS and JavaScript. The catalogue, search, 
 
 Serve this folder with any static web server, then open `index.html`. The catalogue is at `shop.html`.
 
+## Cebri BizAssist dashboard
+
+The `bizassist/` folder contains the Flask-based BizAssist dashboard branded for Cebri Curtains & Blinds. It runs as a separate app from the static storefront; open `/dashboard` on its Flask server. After its server-only Supabase settings are configured, the Orders view reads Cebri quote requests. Conversations, metrics, tasks, and WhatsApp remain demo or unconnected features. See [`bizassist/README.md`](bizassist/README.md) for setup and deployment notes.
+
 ## Supabase order backend
 
 The backend is a Supabase Postgres table and Edge Functions. Customer details are stored in `public.orders`; row-level security is enabled and browser clients have no access to read orders. Requests are validated, require customer consent, and are rate-limited. The functions store only salted hashes for rate limits, not raw network addresses. The website also has an AI chat assistant for curtain and blind questions; it does not store chat transcripts in Cebri's database.

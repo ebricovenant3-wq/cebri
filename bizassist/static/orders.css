@@ -1,0 +1,60 @@
+.orders-message {
+  padding: 20px 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.order-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.order-card {
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+}
+
+.order-card-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.order-card-heading strong,
+.order-card-heading small {
+  display: block;
+}
+
+.order-card-heading strong {
+  font-size: 11px;
+}
+
+.order-card-heading small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.order-status {
+  padding: 5px 8px;
+  border-radius: 4px;
+  background: var(--pale-orange);
+  color: var(--orange);
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.order-items {
+  margin: 12px 0 7px;
+  font-size: 10px;
+}
+
+.order-date {
+  color: var(--muted);
+  font-size: 9px;
+}

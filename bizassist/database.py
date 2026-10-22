@@ -1,4 +1,4 @@
-"""SQLite persistence for BizAssist customers, enquiries, and orders."""
+"""Persistence helpers for BizAssist using SQLite locally or PostgreSQL on Render."""
 
 import math
 import os
@@ -7,15 +7,58 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+try:
+    import psycopg
+    from psycopg.rows import dict_row
+except ImportError:  # PostgreSQL support is only needed when DATABASE_URL is set.
+    psycopg = None
+    dict_row = None
+
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
-_database_path = Path(os.getenv("DATABASE_PATH", "bizassist.sqlite3"))
-DB_NAME = _database_path if _database_path.is_absolute() else Path(__file__).resolve().parent / _database_path
+_configured_url = os.getenv("DATABASE_URL", "").strip()
+if _configured_url:
+    DB_NAME = _configured_url
+else:
+    _configured_path = Path(os.getenv("DATABASE_PATH", "bizassist.sqlite3"))
+    DB_NAME = (_configured_path if _configured_path.is_absolute()
+               else Path(__file__).resolve().parent / _configured_path)
+
+DATABASE_ERRORS = (sqlite3.Error,) + ((psycopg.Error,) if psycopg else ())
+INCOMING_MESSAGE_ERRORS = DATABASE_ERRORS + (ValueError,)
 
 
-def get_connection(database_path=DB_NAME):
-    """Open a SQLite connection with named row access and foreign keys enabled."""
-    path = Path(database_path)
+def _is_postgres(database_target):
+    return isinstance(database_target, str) and database_target.startswith(
+        ("postgres://", "postgresql://")
+    )
+
+
+class _PostgresConnection:
+    """Adapt the project's small SQLite-style execute interface to psycopg."""
+
+    def __init__(self, database_url):
+        if psycopg is None:
+            raise RuntimeError("Install psycopg to use a PostgreSQL DATABASE_URL.")
+        self.connection = psycopg.connect(database_url, row_factory=dict_row)
+
+    def __enter__(self):
+        self.connection.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return self.connection.__exit__(exc_type, exc_value, traceback)
+
+    def execute(self, statement, parameters=()):
+        return self.connection.execute(statement.replace("?", "%s"), parameters)
+
+
+def get_connection(database_target=DB_NAME):
+    """Open a connection and enable SQLite foreign keys where applicable."""
+    if _is_postgres(database_target):
+        return _PostgresConnection(database_target)
+
+    path = Path(database_target)
     path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(path)
     connection.row_factory = sqlite3.Row
@@ -23,9 +66,64 @@ def get_connection(database_path=DB_NAME):
     return connection
 
 
-def initialize_database(database_path=DB_NAME):
-    """Create tables and add order fields when upgrading the original scaffold."""
-    with get_connection(database_path) as conn:
+def _initialize_postgres(database_url):
+    with get_connection(database_url) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS customers (
+                id BIGSERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                phone TEXT UNIQUE,
+                email TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS enquiries (
+                id BIGSERIAL PRIMARY KEY,
+                customer_id BIGINT NOT NULL REFERENCES customers(id),
+                message TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'open',
+                provider_message_id TEXT UNIQUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS orders (
+                id BIGSERIAL PRIMARY KEY,
+                customer_id BIGINT NOT NULL REFERENCES customers(id),
+                product TEXT NOT NULL DEFAULT 'Unspecified',
+                quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
+                unit_price DOUBLE PRECISION NOT NULL DEFAULT 0 CHECK (unit_price >= 0),
+                total_amount DOUBLE PRECISION NOT NULL DEFAULT 0,
+                currency TEXT NOT NULL DEFAULT 'USD',
+                status TEXT NOT NULL DEFAULT 'Pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # Preserve data created by the original SQLite schema when a compatible
+        # Postgres database is upgraded in the future.
+        additions = {
+            "product": "TEXT NOT NULL DEFAULT 'Unspecified'",
+            "quantity": "INTEGER NOT NULL DEFAULT 1",
+            "unit_price": "DOUBLE PRECISION NOT NULL DEFAULT 0",
+            "total_amount": "DOUBLE PRECISION NOT NULL DEFAULT 0",
+            "currency": "TEXT NOT NULL DEFAULT 'USD'",
+        }
+        for name, definition in additions.items():
+            conn.execute(f"ALTER TABLE orders ADD COLUMN IF NOT EXISTS {name} {definition}")
+        conn.execute("ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS provider_message_id TEXT")
+        conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS enquiries_provider_message_id_idx "
+                     "ON enquiries(provider_message_id)")
+
+
+def initialize_database(database_target=DB_NAME):
+    """Create tables and add compatible order fields without dropping data."""
+    if _is_postgres(database_target):
+        _initialize_postgres(database_target)
+        return
+
+    with get_connection(database_target) as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS customers (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -81,9 +179,9 @@ def initialize_database(database_path=DB_NAME):
                          "ON enquiries(provider_message_id)")
 
 
-def init_db(database_path):
+def init_db(database_target=DB_NAME):
     """Compatibility wrapper for the Flask app's original initialization call."""
-    initialize_database(database_path)
+    initialize_database(database_target)
 
 
 def _clean_required(value, field, max_length):
@@ -132,10 +230,18 @@ def save_order(name, phone, product, quantity, unit_price, currency="NGN"):
             ON CONFLICT(phone) DO UPDATE SET name = excluded.name
         """, (name, phone))
         customer = conn.execute("SELECT id FROM customers WHERE phone = ?", (phone,)).fetchone()
-        cursor = conn.execute("""
+        insert_sql = """
             INSERT INTO orders (customer_id, product, quantity, unit_price, total_amount, currency)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (customer["id"], product, quantity, unit_price, quantity * unit_price, currency))
+        """
+        if _is_postgres(DB_NAME):
+            row = conn.execute(insert_sql + " RETURNING id", (
+                customer["id"], product, quantity, unit_price, quantity * unit_price, currency
+            )).fetchone()
+            return row["id"]
+        cursor = conn.execute(insert_sql, (
+            customer["id"], product, quantity, unit_price, quantity * unit_price, currency
+        ))
         return cursor.lastrowid
 
 
@@ -166,10 +272,17 @@ def save_incoming_message(phone, name, message, message_id):
             ON CONFLICT(phone) DO UPDATE SET name = excluded.name
         """, (name, phone))
         customer = conn.execute("SELECT id FROM customers WHERE phone = ?", (phone,)).fetchone()
-        cursor = conn.execute("""
-            INSERT OR IGNORE INTO enquiries (customer_id, message, provider_message_id)
-            VALUES (?, ?, ?)
-        """, (customer["id"], message, message_id))
+        if _is_postgres(DB_NAME):
+            cursor = conn.execute("""
+                INSERT INTO enquiries (customer_id, message, provider_message_id)
+                VALUES (?, ?, ?)
+                ON CONFLICT(provider_message_id) DO NOTHING
+            """, (customer["id"], message, message_id))
+        else:
+            cursor = conn.execute("""
+                INSERT OR IGNORE INTO enquiries (customer_id, message, provider_message_id)
+                VALUES (?, ?, ?)
+            """, (customer["id"], message, message_id))
         return cursor.rowcount == 1
 
 
